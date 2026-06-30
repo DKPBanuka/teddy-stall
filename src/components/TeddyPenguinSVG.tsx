@@ -98,11 +98,6 @@ export function TeddyPenguinSVG({ colors, className, size }: { colors: PenguinCo
       <ellipse cx="160" cy="116" rx="64" ry="60" fill={colors.body} />
       <ellipse cx="160" cy="124" rx="44" ry="46" fill={colors.belly} />
 
-      {/* ── TEDDY BUMPS ── */}
-      <circle cx="106" cy="72" r="20" fill={colors.body} />
-      <circle cx="106" cy="72" r="12" fill={colors.accent} opacity="0.4" />
-      <circle cx="214" cy="72" r="20" fill={colors.body} />
-      <circle cx="214" cy="72" r="12" fill={colors.accent} opacity="0.4" />
 
       {/* ── EYES ── */}
       <circle cx="136" cy="108" r="19" fill="white" />
