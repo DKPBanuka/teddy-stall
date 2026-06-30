@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { TeddyDinoSVG, getDinoColors } from '@/components/TeddyDinoSVG';
 import { TeddyUnicornSVG, getUnicornColors } from '@/components/TeddyUnicornSVG';
+import { TeddyElephantSVG, getElephantColors } from '@/components/TeddyElephantSVG';
 import {
   Product,
   Sale,
@@ -84,17 +85,7 @@ function ToyIcon({ category, color, className = "w-12 h-12" }: { category?: stri
       ) : resolvedCategory === 'unicorn' ? (
         <TeddyUnicornSVG colors={getUnicornColors(color)} className={className} />
       ) : resolvedCategory === 'elephant' ? (
-        <svg viewBox="0 0 100 100" className={className} style={{ fill: fillHex }}>
-          <circle cx="50" cy="55" r="23" />
-          <circle cx="50" cy="40" r="15" />
-          <ellipse cx="32" cy="35" rx="12" ry="10" />
-          <ellipse cx="68" cy="35" rx="12" ry="10" />
-          <path d="M50,45 Q50,60 40,58 Q38,57 40,54" fill="none" stroke="#27272a" strokeWidth="3" strokeLinecap="round" />
-          <circle cx="45" cy="38" r="1.5" fill="#000" />
-          <circle cx="55" cy="38" r="1.5" fill="#000" />
-          <circle cx="38" cy="76" r="6" />
-          <circle cx="62" cy="76" r="6" />
-        </svg>
+        <TeddyElephantSVG colors={getElephantColors(color)} className={className} />
       ) : resolvedCategory === 'penguin' ? (
         <svg viewBox="0 0 100 100" className={className} style={{ fill: fillHex }}>
           <ellipse cx="50" cy="55" rx="23" ry="28" />
