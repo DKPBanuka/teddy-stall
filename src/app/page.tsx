@@ -9,6 +9,7 @@ import { TeddyUnicornSVG, getUnicornColors } from '@/components/TeddyUnicornSVG'
 import { TeddyElephantSVG, getElephantColors } from '@/components/TeddyElephantSVG';
 import { TeddyPenguinSVG, getPenguinColors } from '@/components/TeddyPenguinSVG';
 import { TeddyBearSVG, getBearColors } from '@/components/TeddyBearSVG';
+import { TeddyStitchSVG, getStitchColors } from '@/components/TeddyStitchSVG';
 import {
   Product,
   Sale,
@@ -90,6 +91,8 @@ function ToyIcon({ category, color, className = "w-12 h-12" }: { category?: stri
         <TeddyElephantSVG colors={getElephantColors(color)} className={className} />
       ) : resolvedCategory === 'penguin' ? (
         <TeddyPenguinSVG colors={getPenguinColors(color)} className={className} />
+      ) : resolvedCategory === 'stitch' ? (
+        <TeddyStitchSVG colors={getStitchColors(color)} className={className} />
       ) : (
         <TeddyBearSVG colors={getBearColors(color)} className={className} />
       )}
@@ -2735,6 +2738,7 @@ export default function Dashboard() {
                   <option value="Unicorn">🦄 Unicorn</option>
                   <option value="Elephant">🐘 Elephant</option>
                   <option value="Penguin">🐧 Penguin</option>
+                  <option value="Stitch">🌺 Stitch</option>
                 </select>
               </div>
 

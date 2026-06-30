@@ -1,4 +1,4 @@
-const CACHE_NAME = 'teddy-pos-cache-v8';
+const CACHE_NAME = 'teddy-pos-cache-v9';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',
