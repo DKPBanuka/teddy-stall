@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { TeddyDinoSVG, getDinoColors } from '@/components/TeddyDinoSVG';
+import { TeddyUnicornSVG, getUnicornColors } from '@/components/TeddyUnicornSVG';
 import {
   Product,
   Sale,
@@ -81,14 +82,7 @@ function ToyIcon({ category, color, className = "w-12 h-12" }: { category?: stri
       {resolvedCategory === 'dino' ? (
         <TeddyDinoSVG colors={getDinoColors(color)} className={className} />
       ) : resolvedCategory === 'unicorn' ? (
-        <svg viewBox="0 0 100 100" className={className} style={{ fill: fillHex }}>
-          <path d="M30,75 C30,55 45,35 60,35 C70,35 80,45 80,55 C80,65 70,75 55,75 C45,75 30,75 30,75 Z" />
-          <circle cx="65" cy="45" r="17" />
-          <circle cx="58" cy="42" r="2" fill="#000" />
-          <polygon points="70,30 85,10 75,27" fill="#facc15" />
-          <path d="M55,30 Q45,45 42,65" stroke="#f472b6" strokeWidth="4" strokeLinecap="round" />
-          <ellipse cx="78" cy="48" rx="3" ry="5" fill="#fda4af" opacity="0.6" />
-        </svg>
+        <TeddyUnicornSVG colors={getUnicornColors(color)} className={className} />
       ) : resolvedCategory === 'elephant' ? (
         <svg viewBox="0 0 100 100" className={className} style={{ fill: fillHex }}>
           <circle cx="50" cy="55" r="23" />
