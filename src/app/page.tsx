@@ -1228,21 +1228,21 @@ export default function Dashboard() {
                     {/* PRICE FILTER BADGES */}
                     <div className="flex flex-col gap-2">
                       <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Price Filter</p>
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-none whitespace-nowrap">
                         {[
                           { key: 'All', label: 'All' },
-                          { key: 'Under500', label: 'Under Rs.500' },
-                          { key: '500-1000', label: 'Rs.500 - Rs.1000' },
-                          { key: '1000-1500', label: 'Rs.1000 - Rs.1500' },
-                          { key: 'Above1500', label: 'Above Rs.1500' }
+                          { key: 'Under500', label: '< 500' },
+                          { key: '500-1000', label: '500 - 1000' },
+                          { key: '1000-1500', label: '1000 - 1500' },
+                          { key: 'Above1500', label: '> 1500' }
                         ].map(f => (
                           <button
                             key={f.key}
                             onClick={() => setPriceRangeFilter(f.key as any)}
-                            className={`px-3 py-1.5 rounded-full text-[10px] font-bold cursor-pointer transition-all active:scale-95 ${
+                            className={`px-3 py-1.5 rounded-full text-[10px] font-bold cursor-pointer transition-all active:scale-95 shrink-0 ${
                               priceRangeFilter === f.key
                                 ? 'bg-[#5334ac] text-white shadow-md'
-                                : 'bg-white dark:bg-zinc-900 text-zinc-650 dark:text-zinc-400 hover:bg-zinc-100'
+                                : 'bg-white dark:bg-zinc-900 text-zinc-650 dark:text-zinc-400 hover:bg-zinc-100 border border-zinc-150/60 dark:border-zinc-800'
                             }`}
                           >
                             {f.label}
