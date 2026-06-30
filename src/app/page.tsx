@@ -196,6 +196,7 @@ export default function Dashboard() {
 
   // Submit blocker for checkouts
   const [submittingCheckout, setSubmittingCheckout] = useState<boolean>(false);
+  const [submittingExpense, setSubmittingExpense] = useState<boolean>(false);
 
   // Guard page load
   useEffect(() => {
@@ -434,8 +435,9 @@ export default function Dashboard() {
   // --- Add Expense Actions ---
   const handleSaveExpense = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!expenseName || !expenseAmountVal || !user) return;
+    if (!expenseName || !expenseAmountVal || !user || submittingExpense) return;
 
+    setSubmittingExpense(true);
     const expense: Expense = {
       id: 'exp_' + Math.random().toString(36).substr(2, 9),
       description: `${expenseName.trim()} (${expenseCategory})` + (expenseNotes ? ` - ${expenseNotes.trim()}` : ''),
@@ -453,6 +455,8 @@ export default function Dashboard() {
       await loadStoreData();
     } catch (err: any) {
       alert('Failed to log expense: ' + err.message);
+    } finally {
+      setSubmittingExpense(false);
     }
   };
 
@@ -1932,9 +1936,10 @@ export default function Dashboard() {
 
                       <button
                         type="submit"
-                        className="w-full py-3 bg-[#5334ac] hover:bg-[#482b9c] text-white font-bold rounded-xl active:scale-[0.98] transition-all cursor-pointer text-xs"
+                        disabled={submittingExpense}
+                        className="w-full py-3 bg-[#5334ac] hover:bg-[#482b9c] disabled:opacity-40 disabled:pointer-events-none text-white font-bold rounded-xl active:scale-[0.98] transition-all cursor-pointer text-xs"
                       >
-                        SAVE EXPENSE
+                        {submittingExpense ? 'SAVING EXPENSE...' : 'SAVE EXPENSE'}
                       </button>
                     </form>
                   </div>
@@ -2669,8 +2674,8 @@ export default function Dashboard() {
       {/* --- ADD/EDIT PRODUCT ATTRS MODAL --- */}
       {showProductModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 max-w-md w-full rounded-3xl p-6 shadow-2xl space-y-4">
-            <div className="flex justify-between items-center">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 max-w-md w-full rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex justify-between items-center shrink-0">
               <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-50">
                 {editingProduct ? 'Edit Teddy Bear Details' : 'Register New Toy Model'}
               </h3>
@@ -2679,7 +2684,7 @@ export default function Dashboard() {
               </button>
             </div>
 
-            <form onSubmit={handleProductSubmit} className="space-y-4 text-xs">
+            <form onSubmit={handleProductSubmit} className="space-y-4 text-xs overflow-y-auto pr-1 flex-1 scrollbar-thin">
               <div>
                 <label className="block text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">Model Name</label>
                 <input
