@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { isFirebaseConfigured } from '@/lib/firebase';
+import { TeddyDinoSVG, getDinoColors } from '@/components/TeddyDinoSVG';
 import {
   Product,
   Sale,
@@ -78,16 +79,7 @@ function ToyIcon({ category, color, className = "w-12 h-12" }: { category?: stri
   return (
     <div className="p-2 rounded-2xl flex items-center justify-center bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-100 dark:border-zinc-700/40 shrink-0 shadow-xs">
       {resolvedCategory === 'dino' ? (
-        <svg viewBox="0 0 100 100" className={className} style={{ fill: fillHex }}>
-          <path d="M20,60 Q30,30 50,30 Q65,30 75,50 Q85,55 90,50 Q85,65 80,75 Q65,85 45,85 Q20,85 20,60" />
-          <circle cx="50" cy="30" r="14" />
-          <circle cx="43" cy="27" r="2" fill="#000" />
-          <polygon points="62,20 68,15 67,23" fill="#ef4444" />
-          <polygon points="73,32 80,28 77,36" fill="#ef4444" />
-          <polygon points="80,48 88,45 84,53" fill="#ef4444" />
-          <ellipse cx="38" cy="85" rx="8" ry="4" />
-          <ellipse cx="62" cy="85" rx="8" ry="4" />
-        </svg>
+        <TeddyDinoSVG colors={getDinoColors(color)} className={className} />
       ) : resolvedCategory === 'unicorn' ? (
         <svg viewBox="0 0 100 100" className={className} style={{ fill: fillHex }}>
           <path d="M30,75 C30,55 45,35 60,35 C70,35 80,45 80,55 C80,65 70,75 55,75 C45,75 30,75 30,75 Z" />
