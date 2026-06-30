@@ -57,10 +57,6 @@ export function TeddyDinoSVG({ colors, className, size }: { colors: DinoColors; 
       className={className}
       style={{ filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.08))" }}
     >
-      {/* ── TAIL ── */}
-      <ellipse cx="258" cy="210" rx="28" ry="16" fill={colors.body} transform="rotate(-20 258 210)" />
-      <ellipse cx="278" cy="222" rx="16" ry="10" fill={colors.body} transform="rotate(-30 278 222)" />
-      <ellipse cx="293" cy="232" rx="9" ry="7" fill={colors.body} transform="rotate(-35 293 232)" />
 
       {/* ── BACK SPIKES ── */}
       {/* spike 1 */}
