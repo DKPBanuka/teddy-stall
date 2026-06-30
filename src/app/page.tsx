@@ -224,6 +224,9 @@ export default function Dashboard() {
   const [selectedSizeFilter, setSelectedSizeFilter] = useState<string>('All');
   const [showFilterPanel, setShowFilterPanel] = useState<boolean>(false);
 
+  // Submit blocker for checkouts
+  const [submittingCheckout, setSubmittingCheckout] = useState<boolean>(false);
+
   // Guard page load
   useEffect(() => {
     if (!loading && !user) {
@@ -370,7 +373,7 @@ export default function Dashboard() {
 
   // Perform multi checkout
   const handlePOSCheckout = async () => {
-    if (cart.length === 0 || !user) return;
+    if (cart.length === 0 || !user || submittingCheckout) return;
     const numCash = Number(cashReceived || 0);
     if (numCash < cartTotal) {
       alert('Cash received is less than total amount!');
@@ -398,6 +401,7 @@ export default function Dashboard() {
       createdAt: Date.now()
     };
 
+    setSubmittingCheckout(true);
     try {
       await recordSaleLocal(sale);
       showToast(`Sale recorded! Rs. ${sale.total}`);
@@ -410,12 +414,14 @@ export default function Dashboard() {
       await loadStoreData();
     } catch (err: any) {
       alert('Checkout failed: ' + err.message);
+    } finally {
+      setSubmittingCheckout(false);
     }
   };
 
   // --- Flow A: Quick Single-Item Checkout ---
   const handleQuickCheckoutConfirm = async () => {
-    if (!activeQuickProduct || !user) return;
+    if (!activeQuickProduct || !user || submittingCheckout) return;
     const itemSubtotal = activeQuickProduct.price * quickQty;
     const itemDiscount = Number(quickDiscount || 0);
     const itemTotal = Math.max(0, itemSubtotal - itemDiscount);
@@ -439,6 +445,7 @@ export default function Dashboard() {
       createdAt: Date.now()
     };
 
+    setSubmittingCheckout(true);
     try {
       await recordSaleLocal(sale);
       showToast(`Sale recorded! Rs. ${sale.total}`);
@@ -449,6 +456,8 @@ export default function Dashboard() {
       await loadStoreData();
     } catch (err: any) {
       alert('Checkout failed: ' + err.message);
+    } finally {
+      setSubmittingCheckout(false);
     }
   };
 
@@ -1243,13 +1252,13 @@ export default function Dashboard() {
 
               <div className="grid grid-cols-2 gap-2 mt-4">
                 <button
-                  onClick={() => { setCashReceived(cartTotal.toString()); setCheckoutScreenActive(true); }}
+                  onClick={() => { setCashReceived(cartTotal.toString()); setCheckoutScreenActive(true); setMobileCartOpen(false); }}
                   className="py-3 border border-[#5334ac] text-[#5334ac] font-bold rounded-2xl text-xs uppercase"
                 >
                   💸 CASH
                 </button>
                 <button
-                  onClick={() => setCheckoutScreenActive(true)}
+                  onClick={() => { setCheckoutScreenActive(true); setMobileCartOpen(false); }}
                   className="py-3 bg-[#5334ac] text-white font-bold rounded-2xl shadow-lg text-xs uppercase"
                 >
                   CHECKOUT →
@@ -1328,10 +1337,10 @@ export default function Dashboard() {
 
             <button
               onClick={handlePOSCheckout}
-              disabled={!cashReceived || Number(cashReceived) < cartTotal}
+              disabled={!cashReceived || Number(cashReceived) < cartTotal || submittingCheckout}
               className="w-full py-4 bg-[#5334ac] hover:bg-[#482b9c] text-white font-bold rounded-2xl shadow-lg active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 text-xs uppercase tracking-wider disabled:opacity-40 disabled:pointer-events-none"
             >
-              ✓ Confirm Sale
+              {submittingCheckout ? 'Processing...' : '✓ Confirm Sale'}
             </button>
           </div>
         </div>
@@ -1535,6 +1544,9 @@ export default function Dashboard() {
                         {groupedCatalog.map(item => {
                           const prod = item.product;
                           const isOutOfStall = item.totalLorryStock <= 0;
+                          const itemsInCart = cart
+                            .filter(cItem => cItem.product.name === prod.name)
+                            .reduce((sum, cItem) => sum + cItem.quantity, 0);
 
                           return (
                             <div
@@ -1553,6 +1565,11 @@ export default function Dashboard() {
                                 isOutOfStall ? 'opacity-50' : ''
                               }`}
                             >
+                              {itemsInCart > 0 && (
+                                <span className="absolute top-3 right-3 px-2 py-0.5 rounded-lg bg-[#5334ac] text-white text-[9px] font-black shadow-xs z-10 animate-pulse">
+                                  {itemsInCart} in Cart
+                                </span>
+                              )}
                               <div className="flex justify-center mb-2">
                                 <ToyIcon category={prod.category} color={prod.color} className="w-16 h-16 group-hover:scale-105 transition-transform" />
                               </div>
@@ -2537,10 +2554,10 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={handleQuickCheckoutConfirm}
-                disabled={activeQuickProduct.lorryStock <= 0}
-                className="py-2.5 bg-[#5334ac] hover:bg-[#482b9c] text-white font-bold rounded-2xl shadow-sm cursor-pointer text-[10px] text-center disabled:opacity-40"
+                disabled={activeQuickProduct.lorryStock <= 0 || submittingCheckout}
+                className="py-2.5 bg-[#5334ac] hover:bg-[#482b9c] text-white font-bold rounded-2xl shadow-sm cursor-pointer text-[10px] text-center disabled:opacity-40 disabled:pointer-events-none"
               >
-                CONFIRM SALE ✓
+                {submittingCheckout ? 'PROCESSING...' : 'CONFIRM SALE ✓'}
               </button>
             </div>
 
