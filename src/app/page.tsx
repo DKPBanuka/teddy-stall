@@ -852,7 +852,17 @@ export default function Dashboard() {
   const statsExpenses = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
   const statsLorryStock = products.reduce((sum, p) => sum + p.lorryStock, 0);
   const statsShrinkageCount = filteredShrinkage.reduce((sum, s) => sum + s.quantity, 0);
-  const statsNetCash = statsRevenue - statsExpenses;
+  
+  // Calculate dynamic valuation of lost/damaged shrinkage items
+  const statsShrinkageLoss = React.useMemo(() => {
+    return filteredShrinkage.reduce((sum, s) => {
+      const match = products.find(p => p.id === s.productId);
+      const price = match ? match.price : 0;
+      return sum + (s.quantity * price);
+    }, 0);
+  }, [filteredShrinkage, products]);
+
+  const statsNetCash = statsRevenue - statsExpenses - statsShrinkageLoss;
 
   // Quick Checkout Helpers (Dynamic lists based on DB variants of active product name)
   const availableQuickSizes = React.useMemo(() => {
@@ -970,7 +980,7 @@ export default function Dashboard() {
                   : 'text-zinc-655 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50'
               }`}
             >
-              <TrendingUp className="w-4 h-4" /> Revenue Dashboard
+              <TrendingUp className="w-4 h-4" /> Stall Analytics
             </button>
           )}
 
@@ -1098,7 +1108,7 @@ export default function Dashboard() {
                     activeTab === 'reports' ? 'bg-[#5334ac]/10 text-[#5334ac]' : 'text-zinc-500'
                   }`}
                 >
-                  <TrendingUp className="w-4.5 h-4.5" /> Revenue Dashboard
+                  <TrendingUp className="w-4.5 h-4.5" /> Stall Analytics
                 </button>
               )}
               {isAdmin && (
@@ -1377,14 +1387,17 @@ export default function Dashboard() {
                           <div className="space-y-2">
                             <label className="block text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Toy Category</label>
                             <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none whitespace-nowrap">
-                              {['All', 'Teddy', 'Dino', 'Unicorn', 'Elephant', 'Penguin'].map(cat => {
+                              {['All', 'Teddy', 'Dino', 'Unicorn', 'Elephant', 'Penguin', 'Stitch', 'Rabbit', 'Dog'].map(cat => {
                                 const iconsMap: Record<string, string> = {
                                   All: '🌐 All',
                                   Teddy: '🧸 Teddy',
                                   Dino: '🦖 Dino',
                                   Unicorn: '🦄 Unicorn',
                                   Elephant: '🐘 Elephant',
-                                  Penguin: '🐧 Penguin'
+                                  Penguin: '🐧 Penguin',
+                                  Stitch: '🌺 Stitch',
+                                  Rabbit: '🐰 Rabbit',
+                                  Dog: '🐶 Dog'
                                 };
                                 return (
                                   <button
@@ -1959,27 +1972,27 @@ export default function Dashboard() {
               )}
 
               {/* ---------------------------------------------------- */}
-              {/* TAB: REVENUE & ANALYTICS DASHBOARD */}
+              {/* TAB: STALL PERFORMANCE ANALYTICS & REPORTS */}
               {/* ---------------------------------------------------- */}
               {activeTab === 'reports' && (isAdmin || isStockManager) && (
                 <div className="flex flex-col gap-6">
                   {/* Title & Date Filters */}
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                      <h1 className="text-2xl font-black text-zinc-900 dark:text-zinc-50 uppercase tracking-tight">Stall Revenue & Analytics</h1>
-                      <p className="text-xs text-zinc-500 mt-1">Live tracking of transactions, cash flow, and expenses</p>
+                      <h1 className="text-2xl font-black text-zinc-900 dark:text-zinc-50 uppercase tracking-tight">Stall Business Analytics</h1>
+                      <p className="text-xs text-zinc-500 mt-1">Real-time business performance analytics, financial KPI audits, and leakages</p>
                     </div>
 
                     {/* Date filter preset selection */}
                     <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
                       <div className="flex gap-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-1 rounded-2xl w-full md:w-auto overflow-x-auto whitespace-nowrap scrollbar-none">
                         {[
-                          { key: 'all', label: 'All' },
+                          { key: 'all', label: 'All Time' },
                           { key: 'today', label: 'Today' },
                           { key: 'yesterday', label: 'Yesterday' },
                           { key: '7days', label: '7 Days' },
                           { key: 'month', label: 'Month' },
-                          { key: 'custom', label: 'Custom' }
+                          { key: 'custom', label: 'Custom Range' }
                         ].map(f => (
                           <button
                             key={f.key}
@@ -2007,7 +2020,7 @@ export default function Dashboard() {
                           type="date"
                           value={reportsStartDate}
                           onChange={e => setReportsStartDate(e.target.value)}
-                          className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none"
+                          className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-955 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none"
                         />
                       </div>
                       <div>
@@ -2022,7 +2035,7 @@ export default function Dashboard() {
                       <button
                         type="button"
                         onClick={() => { setReportsStartDate(''); setReportsEndDate(''); }}
-                        className="py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-650 dark:text-zinc-300 rounded-xl transition-all cursor-pointer"
+                        className="py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-655 dark:text-zinc-300 rounded-xl transition-all cursor-pointer"
                       >
                         Reset Filter
                       </button>
@@ -2031,26 +2044,29 @@ export default function Dashboard() {
 
                   {/* Summary Metric Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    {/* Gross Sales */}
                     <div className="p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-xs flex items-center gap-4">
-                      <div className="p-3 bg-amber-500/10 text-amber-500 rounded-2xl">
-                        <DollarSign className="w-5.5 h-5.5" />
+                      <div className="p-3 bg-indigo-500/10 text-indigo-500 rounded-2xl">
+                        <ShoppingBag className="w-5.5 h-5.5" />
                       </div>
                       <div>
                         <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider leading-none">Gross Sales</p>
-                        <p className="text-base font-black text-zinc-955 dark:text-white mt-1">Rs. {statsRevenue}</p>
+                        <p className="text-base font-black text-zinc-955 dark:text-white mt-1">Rs. {statsRevenue + statsDiscount}</p>
                       </div>
                     </div>
 
+                    {/* Discounts */}
                     <div className="p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-xs flex items-center gap-4">
-                      <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-2xl">
+                      <div className="p-3 bg-amber-500/10 text-amber-500 rounded-2xl">
                         <Percent className="w-5.5 h-5.5" />
                       </div>
                       <div>
-                        <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider leading-none">Discounts</p>
+                        <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider leading-none">Discounts Given</p>
                         <p className="text-base font-black text-zinc-955 dark:text-white mt-1">Rs. {statsDiscount}</p>
                       </div>
                     </div>
 
+                    {/* Stall Expenses */}
                     <div className="p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-xs flex items-center gap-4">
                       <div className="p-3 bg-red-500/10 text-red-500 rounded-2xl">
                         <TrendingDown className="w-5.5 h-5.5" />
@@ -2061,31 +2077,34 @@ export default function Dashboard() {
                       </div>
                     </div>
 
+                    {/* Shrinkage Loss Valuation */}
                     <div className="p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-xs flex items-center gap-4">
-                      <div className="p-3 bg-blue-500/10 text-blue-500 rounded-2xl">
-                        <ShoppingCart className="w-5.5 h-5.5" />
+                      <div className="p-3 bg-rose-500/10 text-rose-500 rounded-2xl">
+                        <AlertTriangle className="w-5.5 h-5.5" />
                       </div>
                       <div>
-                        <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider leading-none">Net Profit (Cash)</p>
-                        <p className={`text-base font-black mt-1 ${statsNetCash < 0 ? 'text-red-500' : 'text-emerald-600'}`}>Rs. {statsNetCash}</p>
+                        <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider leading-none">Shrinkage Loss</p>
+                        <p className="text-base font-black text-rose-500 mt-1">Rs. {statsShrinkageLoss}</p>
+                        <span className="text-[8px] text-zinc-450 dark:text-zinc-500 block leading-none mt-0.5">({statsShrinkageCount} units)</span>
                       </div>
                     </div>
 
+                    {/* Net Operating Profit */}
                     <div className="p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-xs flex items-center gap-4">
-                      <div className="p-3 bg-zinc-500/10 text-zinc-500 rounded-2xl">
-                        <Package className="w-5.5 h-5.5" />
+                      <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-2xl">
+                        <DollarSign className="w-5.5 h-5.5" />
                       </div>
                       <div>
-                        <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider leading-none">Lorry / Lost Qty</p>
-                        <p className="text-base font-black text-zinc-955 dark:text-white mt-1">{statsLorryStock} / {statsShrinkageCount}</p>
+                        <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider leading-none">Net Profit (Operating)</p>
+                        <p className={`text-base font-black mt-1 ${statsNetCash < 0 ? 'text-red-500' : 'text-emerald-600'}`}>Rs. {statsNetCash}</p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Responsive Visual Charts Section */}
+                  {/* Visual Analytics Charts Panel */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Sales Timeline chart (Spans 2 cols on lg) */}
-                    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-xs lg:col-span-2 flex flex-col">
+                    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm lg:col-span-2 flex flex-col">
                       <h3 className="font-extrabold text-zinc-900 dark:text-zinc-100 text-sm mb-1">POS Sales Frequency</h3>
                       <p className="text-[10px] text-zinc-400 mb-6">Sales transactions plotted chronologically over selected range</p>
                       
@@ -2147,15 +2166,15 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    {/* Category-wise breakdown progress chart */}
-                    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-xs flex flex-col">
+                    {/* Sales Share by Category */}
+                    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm flex flex-col">
                       <h3 className="font-extrabold text-zinc-900 dark:text-zinc-100 text-sm mb-1">Sales by Category</h3>
                       <p className="text-[10px] text-zinc-400 mb-6">Revenue share logged per product category</p>
                       
-                      <div className="flex-1 flex flex-col justify-center gap-4">
+                      <div className="flex-1 flex flex-col justify-center gap-3">
                         {(() => {
                           const categoryRev: Record<string, number> = {
-                            Teddy: 0, Dino: 0, Unicorn: 0, Elephant: 0, Penguin: 0
+                            Teddy: 0, Dino: 0, Unicorn: 0, Elephant: 0, Penguin: 0, Stitch: 0, Rabbit: 0, Dog: 0
                           };
                           filteredSales.forEach(s => {
                             s.items.forEach(item => {
@@ -2166,7 +2185,9 @@ export default function Dashboard() {
                           });
 
                           const totalCategorySales = Object.values(categoryRev).reduce((sum, v) => sum + v, 0);
-                          const sortedCategories = Object.entries(categoryRev).map(([name, rev]) => ({ name, rev }));
+                          const sortedCategories = Object.entries(categoryRev)
+                            .map(([name, rev]) => ({ name, rev }))
+                            .sort((a, b) => b.rev - a.rev);
 
                           if (totalCategorySales === 0) {
                             return <span className="text-zinc-400 text-xs text-center font-semibold">No category metrics logged</span>;
@@ -2174,13 +2195,14 @@ export default function Dashboard() {
 
                           return sortedCategories.map((item, idx) => {
                             const pct = totalCategorySales > 0 ? (item.rev / totalCategorySales) * 100 : 0;
+                            if (item.rev === 0) return null;
                             return (
                               <div key={idx} className="space-y-1">
                                 <div className="flex justify-between text-xs font-bold">
                                   <span className="text-zinc-700 dark:text-zinc-300">{item.name}</span>
-                                  <span className="text-zinc-500">Rs.{item.rev} ({Math.round(pct)}%)</span>
+                                  <span className="text-zinc-550">Rs.{item.rev} ({Math.round(pct)}%)</span>
                                 </div>
-                                <div className="w-full h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                                <div className="w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                                   <div
                                     style={{ width: `${pct}%` }}
                                     className="h-full bg-gradient-to-r from-indigo-500 to-[#5334ac] rounded-full"
@@ -2194,14 +2216,115 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {/* Shrinkage & Recent sales logs block */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Size & Loss Metrics Panel */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Size Sales Performance Chart */}
+                    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm flex flex-col">
+                      <h3 className="font-extrabold text-zinc-900 dark:text-zinc-100 text-sm mb-1">Sales by Size</h3>
+                      <p className="text-[10px] text-zinc-400 mb-6">Revenue distribution across size categories</p>
+                      
+                      <div className="flex-1 flex flex-col justify-center gap-3">
+                        {(() => {
+                          const sizeRev: Record<string, number> = {
+                            Small: 0, Medium: 0, Large: 0, Giant: 0
+                          };
+                          filteredSales.forEach(s => {
+                            s.items.forEach(item => {
+                              const sz = item.size || 'Medium';
+                              sizeRev[sz] = (sizeRev[sz] || 0) + (item.price * item.quantity);
+                            });
+                          });
+
+                          const totalSizeSales = Object.values(sizeRev).reduce((sum, v) => sum + v, 0);
+                          const sortedSizes = Object.entries(sizeRev).map(([name, rev]) => ({ name, rev }));
+
+                          if (totalSizeSales === 0) {
+                            return <span className="text-zinc-400 text-xs text-center font-semibold">No size metrics logged</span>;
+                          }
+
+                          return sortedSizes.map((item, idx) => {
+                            const pct = totalSizeSales > 0 ? (item.rev / totalSizeSales) * 100 : 0;
+                            return (
+                              <div key={idx} className="space-y-1">
+                                <div className="flex justify-between text-xs font-bold">
+                                  <span className="text-zinc-700 dark:text-zinc-300">{item.name}</span>
+                                  <span className="text-zinc-550">Rs.{item.rev} ({Math.round(pct)}%)</span>
+                                </div>
+                                <div className="w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                                  <div
+                                    style={{ width: `${pct}%` }}
+                                    className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full"
+                                  ></div>
+                                </div>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+
+                    {/* Top Selling Products */}
+                    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm flex flex-col">
+                      <h3 className="font-extrabold text-zinc-900 dark:text-zinc-100 text-sm mb-1">Top Selling Items</h3>
+                      <p className="text-[10px] text-zinc-400 mb-6">Best performing models by quantity sold</p>
+                      
+                      <div className="flex-1 flex flex-col justify-center gap-3">
+                        {(() => {
+                          const productQty: Record<string, { qty: number; category: string; color: string }> = {};
+                          filteredSales.forEach(s => {
+                            s.items.forEach(item => {
+                              const key = `${item.name} (${item.color})`;
+                              if (productQty[key]) {
+                                productQty[key].qty += item.quantity;
+                              } else {
+                                const matched = products.find(p => p.id === item.productId);
+                                productQty[key] = {
+                                  qty: item.quantity,
+                                  category: matched?.category || 'Teddy',
+                                  color: item.color
+                                };
+                              }
+                            });
+                          });
+
+                          const sortedProds = Object.entries(productQty)
+                            .map(([name, data]) => ({ name, ...data }))
+                            .sort((a, b) => b.qty - a.qty)
+                            .slice(0, 4);
+
+                          if (sortedProds.length === 0) {
+                            return <span className="text-zinc-400 text-xs text-center font-semibold">No sales logged</span>;
+                          }
+
+                          const maxQty = Math.max(...sortedProds.map(p => p.qty), 1);
+
+                          return sortedProds.map((item, idx) => {
+                            const percentage = (item.qty / maxQty) * 100;
+                            return (
+                              <div key={idx} className="flex items-center gap-3">
+                                <ToyIcon category={item.category} color={item.color} className="w-8 h-8 shrink-0" />
+                                <div className="flex-1 min-w-0 space-y-1">
+                                  <div className="flex justify-between text-xs font-bold truncate">
+                                    <span className="text-zinc-800 dark:text-zinc-200 truncate">{item.name}</span>
+                                    <span className="text-zinc-555 shrink-0">{item.qty} sold</span>
+                                  </div>
+                                  <div className="w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                                    <div style={{ width: `${percentage}%` }} className="h-full bg-[#5334ac] rounded-full"></div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+
                     {/* Shrinkage Loss Logs */}
-                    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-xs flex flex-col">
+                    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm flex flex-col">
                       <h3 className="font-extrabold text-zinc-900 dark:text-zinc-100 text-sm mb-1">Leakage Distribution</h3>
                       <p className="text-[10px] text-zinc-400 mb-6">Quantity comparison of lost / stolen items per category</p>
                       
-                      <div className="flex-1 flex flex-col justify-center gap-4">
+                      <div className="flex-1 flex flex-col justify-center gap-3">
                         {(() => {
                           const leakageByProd: Record<string, number> = {};
                           filteredShrinkage.forEach(log => {
@@ -2215,7 +2338,7 @@ export default function Dashboard() {
                             return <span className="text-zinc-400 text-xs text-center font-semibold">No leakage losses logged in this range</span>;
                           }
 
-                          return dataArr.map((item, idx) => {
+                          return dataArr.slice(0, 4).map((item, idx) => {
                             const percentage = (item.qty / maxQty) * 100;
                             return (
                               <div key={idx} className="space-y-1">
@@ -2223,8 +2346,8 @@ export default function Dashboard() {
                                   <span className="text-zinc-700 dark:text-zinc-300">{item.name}</span>
                                   <span className="text-red-500">-{item.qty} units</span>
                                 </div>
-                                <div className="w-full h-2.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                                  <div style={{ width: `${percentage}%` }} className="h-full bg-gradient-to-r from-red-400 to-red-650 rounded-full"></div>
+                                <div className="w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                                  <div style={{ width: `${percentage}%` }} className="h-full bg-gradient-to-r from-red-400 to-rose-600 rounded-full"></div>
                                 </div>
                               </div>
                             );
@@ -2232,40 +2355,40 @@ export default function Dashboard() {
                         })()}
                       </div>
                     </div>
+                  </div>
 
-                    {/* Recent Transaction Log Ledger */}
-                    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-xs flex flex-col">
-                      <h3 className="font-extrabold text-zinc-900 dark:text-zinc-100 text-sm mb-1">Recent Transactions</h3>
-                      <p className="text-[10px] text-zinc-400 mb-4">Latest cash checkout invoices in this range</p>
-                      
-                      <div className="flex-1 overflow-x-auto">
-                        {filteredSales.length === 0 ? (
-                          <div className="h-full flex items-center justify-center p-8">
-                            <span className="text-zinc-400 text-xs font-semibold">No invoices recorded</span>
-                          </div>
-                        ) : (
-                          <table className="w-full text-left">
-                            <thead>
-                              <tr className="text-[9px] uppercase tracking-wider text-zinc-400 border-b border-zinc-100 dark:border-zinc-850 pb-2">
-                                <th className="pb-2">Items</th>
-                                <th className="pb-2 text-right">Total</th>
-                                <th className="pb-2 text-right">Date</th>
+                  {/* Recent Transactions list */}
+                  <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm flex flex-col">
+                    <h3 className="font-extrabold text-zinc-900 dark:text-zinc-100 text-sm mb-1">Recent Transactions</h3>
+                    <p className="text-[10px] text-zinc-400 mb-4">Latest cash checkout invoices in this range</p>
+                    
+                    <div className="overflow-x-auto">
+                      {filteredSales.length === 0 ? (
+                        <div className="h-full flex items-center justify-center p-8">
+                          <span className="text-zinc-400 text-xs font-semibold">No invoices recorded</span>
+                        </div>
+                      ) : (
+                        <table className="w-full text-left">
+                          <thead>
+                            <tr className="text-[9px] uppercase tracking-wider text-zinc-400 border-b border-zinc-100 dark:border-zinc-850 pb-2">
+                              <th className="pb-2">Items</th>
+                              <th className="pb-2 text-right">Total</th>
+                              <th className="pb-2 text-right">Date</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-zinc-100 dark:divide-zinc-855 text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                            {filteredSales.slice(0, 5).map(log => (
+                              <tr key={log.id}>
+                                <td className="py-2.5 truncate max-w-[250px]">
+                                  {log.items.map(i => `${i.name} (${i.quantity})`).join(', ')}
+                                </td>
+                                <td className="py-2.5 text-right text-emerald-600">Rs.{log.total}</td>
+                                <td className="py-2.5 text-right text-zinc-400 font-semibold">{new Date(log.createdAt).toLocaleDateString()}</td>
                               </tr>
-                            </thead>
-                            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-850 text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                              {filteredSales.slice(0, 5).map(log => (
-                                <tr key={log.id}>
-                                  <td className="py-2.5 truncate max-w-[150px]">
-                                    {log.items.map(i => `${i.name} (${i.quantity})`).join(', ')}
-                                  </td>
-                                  <td className="py-2.5 text-right text-emerald-600">Rs.{log.total}</td>
-                                  <td className="py-2.5 text-right text-zinc-400 font-semibold">{new Date(log.createdAt).toLocaleDateString()}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        )}
-                      </div>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
                     </div>
                   </div>
                 </div>
