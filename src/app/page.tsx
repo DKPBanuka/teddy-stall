@@ -49,7 +49,8 @@ import {
   Percent,
   Menu,
   ChevronRight,
-  Calendar
+  Calendar,
+  SlidersHorizontal
 } from 'lucide-react';
 
 // Unified Color to Hex Converter
@@ -216,6 +217,12 @@ export default function Dashboard() {
   const [reportsFilterType, setReportsFilterType] = useState<'all' | 'today' | 'yesterday' | '7days' | 'month' | 'custom'>('all');
   const [reportsStartDate, setReportsStartDate] = useState<string>('');
   const [reportsEndDate, setReportsEndDate] = useState<string>('');
+
+  // Catalog Search Filters popover
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('All');
+  const [selectedColorFilter, setSelectedColorFilter] = useState<string>('All');
+  const [selectedSizeFilter, setSelectedSizeFilter] = useState<string>('All');
+  const [showFilterPanel, setShowFilterPanel] = useState<boolean>(false);
 
   // Guard page load
   useEffect(() => {
@@ -700,7 +707,22 @@ export default function Dashboard() {
     else if (priceRangeFilter === '1000-1500') matchesPrice = p.price > 1000 && p.price <= 1500;
     else if (priceRangeFilter === 'Above1500') matchesPrice = p.price > 1500;
 
-    return matchesSearch && matchesPrice;
+    let matchesCategory = true;
+    if (selectedCategoryFilter !== 'All') {
+      matchesCategory = p.category === selectedCategoryFilter;
+    }
+
+    let matchesColor = true;
+    if (selectedColorFilter !== 'All') {
+      matchesColor = p.color.toLowerCase() === selectedColorFilter.toLowerCase();
+    }
+
+    let matchesSize = true;
+    if (selectedSizeFilter !== 'All') {
+      matchesSize = p.size === selectedSizeFilter;
+    }
+
+    return matchesSearch && matchesPrice && matchesCategory && matchesColor && matchesSize;
   });
 
   // Group products by unique name for Option 2 Grid View (Now also collecting unique colors)
@@ -1339,16 +1361,141 @@ export default function Dashboard() {
                       <p className="text-xs text-zinc-500 mt-1">Interactive toy cash register. Tapping bear opens instant checkout modal.</p>
                     </div>
 
-                    {/* Search bar */}
-                    <div className="relative">
-                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                      <input
-                        type="text"
-                        placeholder="Search teddy bear..."
-                        value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
-                        className="pl-10 pr-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-xs focus:outline-none focus:ring-2 focus:ring-[#5334ac] w-full shadow-xs"
-                      />
+                    {/* Search bar & Filter Toggle */}
+                    <div className="relative space-y-3">
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                          <input
+                            type="text"
+                            placeholder="Search teddy bear..."
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            className="pl-10 pr-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-xs focus:outline-none focus:ring-2 focus:ring-[#5334ac] w-full shadow-xs font-bold"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowFilterPanel(!showFilterPanel)}
+                          className={`px-4 py-2.5 bg-white dark:bg-zinc-900 border rounded-2xl text-xs font-bold flex items-center gap-2 hover:bg-zinc-50 dark:hover:bg-zinc-850 cursor-pointer active:scale-95 transition-all ${
+                            showFilterPanel
+                              ? 'border-[#5334ac] text-[#5334ac]'
+                              : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400'
+                          }`}
+                        >
+                          <SlidersHorizontal className="w-4 h-4" />
+                          <span className="hidden sm:inline">Filters</span>
+                          {(selectedCategoryFilter !== 'All' || selectedColorFilter !== 'All' || selectedSizeFilter !== 'All') && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#5334ac]"></span>
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Expandable Filter Panel */}
+                      {showFilterPanel && (
+                        <div className="p-4 bg-white dark:bg-zinc-900 border border-zinc-250 dark:border-zinc-800 rounded-3xl shadow-lg space-y-4 text-xs">
+                          {/* Category Filter */}
+                          <div className="space-y-2">
+                            <label className="block text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Toy Category</label>
+                            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none whitespace-nowrap">
+                              {['All', 'Teddy', 'Dino', 'Unicorn', 'Elephant', 'Penguin'].map(cat => {
+                                const iconsMap: Record<string, string> = {
+                                  All: '🌐 All',
+                                  Teddy: '🧸 Teddy',
+                                  Dino: '🦖 Dino',
+                                  Unicorn: '🦄 Unicorn',
+                                  Elephant: '🐘 Elephant',
+                                  Penguin: '🐧 Penguin'
+                                };
+                                return (
+                                  <button
+                                    key={cat}
+                                    type="button"
+                                    onClick={() => setSelectedCategoryFilter(cat)}
+                                    className={`px-3 py-1.5 rounded-xl text-[10px] font-bold cursor-pointer shrink-0 transition-all ${
+                                      selectedCategoryFilter === cat
+                                        ? 'bg-[#5334ac] text-white'
+                                        : 'bg-zinc-50 dark:bg-zinc-955 hover:bg-zinc-100 text-zinc-655'
+                                    }`}
+                                  >
+                                    {iconsMap[cat]}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Color Filter */}
+                          <div className="space-y-2">
+                            <label className="block text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Color Selector</label>
+                            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none whitespace-nowrap items-center">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedColorFilter('All')}
+                                className={`px-3 py-1.5 rounded-xl text-[10px] font-bold cursor-pointer shrink-0 transition-all ${
+                                  selectedColorFilter === 'All'
+                                    ? 'bg-[#5334ac] text-white'
+                                    : 'bg-zinc-50 dark:bg-zinc-955 hover:bg-zinc-100 text-zinc-650'
+                                }`}
+                              >
+                                🌐 All
+                              </button>
+                              {['Brown', 'Pink', 'White', 'Blue', 'Purple', 'Beige', 'Gold', 'Black', 'Green', 'Grey'].map(col => (
+                                <button
+                                  key={col}
+                                  type="button"
+                                  onClick={() => setSelectedColorFilter(col)}
+                                  className={`px-2.5 py-1 rounded-xl text-[10px] font-bold cursor-pointer shrink-0 transition-all flex items-center gap-1.5 border ${
+                                    selectedColorFilter === col
+                                      ? 'border-[#5334ac] bg-[#5334ac]/5 text-[#5334ac] font-black'
+                                      : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-955 text-zinc-650 hover:bg-zinc-50'
+                                  }`}
+                                >
+                                  <span className="w-2.5 h-2.5 rounded-full border border-zinc-200 block shrink-0" style={{ backgroundColor: getColorHex(col) }}></span>
+                                  <span>{col}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Size Filter */}
+                          <div className="space-y-2">
+                            <label className="block text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Size Options</label>
+                            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none whitespace-nowrap">
+                              {['All', 'Small', 'Medium', 'Large', 'Giant'].map(size => (
+                                <button
+                                  key={size}
+                                  type="button"
+                                  onClick={() => setSelectedSizeFilter(size)}
+                                  className={`px-3 py-1.5 rounded-xl text-[10px] font-bold cursor-pointer shrink-0 transition-all ${
+                                    selectedSizeFilter === size
+                                      ? 'bg-[#5334ac] text-white'
+                                      : 'bg-zinc-50 dark:bg-zinc-955 hover:bg-zinc-100 text-zinc-655'
+                                  }`}
+                                >
+                                  {size}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Reset Panel */}
+                          <div className="flex justify-between items-center pt-2 border-t border-zinc-150 dark:border-zinc-850">
+                            <span className="text-[10px] text-zinc-400">Filtering active records</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedCategoryFilter('All');
+                                setSelectedColorFilter('All');
+                                setSelectedSizeFilter('All');
+                              }}
+                              className="text-[#5334ac] font-bold hover:underline cursor-pointer"
+                            >
+                              Reset All Filters
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* PRICE FILTER BADGES */}
@@ -1798,7 +1945,7 @@ export default function Dashboard() {
                       <p className="text-xs text-zinc-500 mt-1">Audit log of cash payments deducted from the register</p>
                     </div>
 
-                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm overflow-hidden">
+                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm overflow-x-auto">
                       <table className="w-full text-left">
                         <thead>
                           <tr className="bg-zinc-50 dark:bg-zinc-955/50 text-zinc-400 text-[10px] font-bold uppercase tracking-wider border-b border-zinc-100 dark:border-zinc-800">
@@ -2155,7 +2302,7 @@ export default function Dashboard() {
                     </button>
                   </div>
 
-                  <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm overflow-hidden">
+                  <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm overflow-x-auto">
                     <table className="w-full text-left">
                       <thead>
                         <tr className="bg-zinc-50 dark:bg-zinc-955/50 text-zinc-400 text-[10px] font-bold uppercase tracking-wider border-b border-zinc-100 dark:border-zinc-800">
