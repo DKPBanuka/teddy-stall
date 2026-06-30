@@ -140,43 +140,7 @@ export async function getProducts(): Promise<Product[]> {
     const store = tx.objectStore('products');
     const req = store.getAll();
     req.onsuccess = () => {
-      // Fallback default mock items in LKR (matching prices)
-      if (req.result.length === 0) {
-        const defaults: Product[] = [
-          { id: 'p1', name: 'Classic Bear', color: 'Brown', size: 'Medium', price: 599, lorryStock: 18, category: 'Teddy', updatedAt: Date.now() },
-          { id: 'p1_l', name: 'Classic Bear', color: 'Brown', size: 'Large', price: 799, lorryStock: 10, category: 'Teddy', updatedAt: Date.now() },
-          { id: 'p1_s', name: 'Classic Bear', color: 'Brown', size: 'Small', price: 499, lorryStock: 20, category: 'Teddy', updatedAt: Date.now() },
-          { id: 'p1_pink', name: 'Classic Bear', color: 'Pink', size: 'Medium', price: 599, lorryStock: 15, category: 'Teddy', updatedAt: Date.now() },
-          { id: 'p2', name: 'Rose Bear', color: 'Pink', size: 'Large', price: 799, lorryStock: 12, category: 'Teddy', updatedAt: Date.now() },
-          { id: 'p2_m', name: 'Rose Bear', color: 'Pink', size: 'Medium', price: 699, lorryStock: 8, category: 'Teddy', updatedAt: Date.now() },
-          { id: 'p2_red', name: 'Rose Bear', color: 'Red', size: 'Large', price: 899, lorryStock: 6, category: 'Teddy', updatedAt: Date.now() },
-          { id: 'p3', name: 'Snow Bear', color: 'White', size: 'Medium', price: 590, lorryStock: 20, category: 'Teddy', updatedAt: Date.now() },
-          { id: 'p3_s', name: 'Snow Bear', color: 'White', size: 'Small', price: 490, lorryStock: 15, category: 'Teddy', updatedAt: Date.now() },
-          { id: 'p4', name: 'Honey Bear', color: 'Beige', size: 'Small', price: 499, lorryStock: 25, category: 'Teddy', updatedAt: Date.now() },
-          { id: 'p5', name: 'Ocean Bear', color: 'Blue', size: 'Large', price: 849, lorryStock: 8, category: 'Teddy', updatedAt: Date.now() },
-          { id: 'p6', name: 'Lavender Bear', color: 'Purple', size: 'Medium', price: 599, lorryStock: 15, category: 'Teddy', updatedAt: Date.now() },
-          { id: 'p7', name: 'Caramel Bear', color: 'Caramel', size: 'Small', price: 699, lorryStock: 10, category: 'Teddy', updatedAt: Date.now() },
-          { id: 'p8', name: 'Panda Bear', color: 'Black & White', size: 'Medium', price: 899, lorryStock: 7, category: 'Teddy', updatedAt: Date.now() },
-          { id: 'p8_g', name: 'Panda Bear', color: 'Black & White', size: 'Giant', price: 1500, lorryStock: 5, category: 'Teddy', updatedAt: Date.now() },
-          { id: 'p9', name: 'Red Bow Bear', color: 'Cream', size: 'Large', price: 999, lorryStock: 6, category: 'Teddy', updatedAt: Date.now() },
-          { id: 'p10_u_m_b', name: 'Unicorn', color: 'Blue', size: 'Medium', price: 1000, lorryStock: 15, category: 'Unicorn', updatedAt: Date.now() },
-          { id: 'p10_u_m_p', name: 'Unicorn', color: 'Pink', size: 'Medium', price: 1000, lorryStock: 20, category: 'Unicorn', updatedAt: Date.now() },
-          { id: 'p10_u_l_b', name: 'Unicorn', color: 'Blue', size: 'Large', price: 1500, lorryStock: 10, category: 'Unicorn', updatedAt: Date.now() },
-          { id: 'p11_dino', name: 'Dino Toy', color: 'Green', size: 'Medium', price: 650, lorryStock: 15, category: 'Dino', updatedAt: Date.now() },
-          { id: 'p11_dino_l', name: 'Dino Toy', color: 'Green', size: 'Large', price: 850, lorryStock: 8, category: 'Dino', updatedAt: Date.now() },
-          { id: 'p12_eleph', name: 'Elephant Toy', color: 'Blue', size: 'Large', price: 850, lorryStock: 12, category: 'Elephant', updatedAt: Date.now() },
-          { id: 'p12_eleph_m', name: 'Elephant Toy', color: 'Blue', size: 'Medium', price: 699, lorryStock: 5, category: 'Elephant', updatedAt: Date.now() },
-          { id: 'p13_peng', name: 'Penguin Toy', color: 'Black', size: 'Small', price: 450, lorryStock: 18, category: 'Penguin', updatedAt: Date.now() },
-        ];
-        const writeTx = localDb.transaction('products', 'readwrite');
-        const writeStore = writeTx.objectStore('products');
-        for (const d of defaults) {
-          writeStore.put(d);
-        }
-        resolve(defaults);
-      } else {
-        resolve(req.result);
-      }
+      resolve(req.result);
     };
     req.onerror = () => reject(req.error);
   });
@@ -447,8 +411,6 @@ export async function getUsers(): Promise<User[]> {
       if (req.result.length === 0) {
         const defaults: User[] = [
           { username: 'admin', name: 'Pasindu (Admin)', role: 'admin', passwordHash: 'admin123', updatedAt: Date.now() },
-          { username: 'manager', name: 'Nimal (Stock Manager)', role: 'stock_manager', passwordHash: 'manager123', updatedAt: Date.now() },
-          { username: 'seller', name: 'Kamal (Seller)', role: 'seller', passwordHash: 'seller123', updatedAt: Date.now() },
         ];
         const writeTx = localDb.transaction('users', 'readwrite');
         const writeStore = writeTx.objectStore('users');
