@@ -7,6 +7,7 @@ import { isFirebaseConfigured } from '@/lib/firebase';
 import { TeddyDinoSVG, getDinoColors } from '@/components/TeddyDinoSVG';
 import { TeddyUnicornSVG, getUnicornColors } from '@/components/TeddyUnicornSVG';
 import { TeddyElephantSVG, getElephantColors } from '@/components/TeddyElephantSVG';
+import { TeddyPenguinSVG, getPenguinColors } from '@/components/TeddyPenguinSVG';
 import {
   Product,
   Sale,
@@ -87,15 +88,7 @@ function ToyIcon({ category, color, className = "w-12 h-12" }: { category?: stri
       ) : resolvedCategory === 'elephant' ? (
         <TeddyElephantSVG colors={getElephantColors(color)} className={className} />
       ) : resolvedCategory === 'penguin' ? (
-        <svg viewBox="0 0 100 100" className={className} style={{ fill: fillHex }}>
-          <ellipse cx="50" cy="55" rx="23" ry="28" />
-          <ellipse cx="50" cy="58" rx="15" ry="18" fill="#ffffff" />
-          <circle cx="45" cy="38" r="2" fill="#000" />
-          <circle cx="55" cy="38" r="2" fill="#000" />
-          <polygon points="50,42 46,47 54,47" fill="#f97316" />
-          <ellipse cx="38" cy="81" rx="6" ry="3.5" fill="#f97316" />
-          <ellipse cx="62" cy="81" rx="6" ry="3.5" fill="#f97316" />
-        </svg>
+        <TeddyPenguinSVG colors={getPenguinColors(color)} className={className} />
       ) : (
         <svg viewBox="0 0 100 100" className={className} style={{ fill: fillHex }}>
           <circle cx="50" cy="50" r="30" />
