@@ -10,6 +10,8 @@ import { TeddyElephantSVG, getElephantColors } from '@/components/TeddyElephantS
 import { TeddyPenguinSVG, getPenguinColors } from '@/components/TeddyPenguinSVG';
 import { TeddyBearSVG, getBearColors } from '@/components/TeddyBearSVG';
 import { TeddyStitchSVG, getStitchColors } from '@/components/TeddyStitchSVG';
+import { TeddyRabbitSVG, getRabbitColors } from '@/components/TeddyRabbitSVG';
+import { TeddyDogSVG, getDogColors } from '@/components/TeddyDogSVG';
 import {
   Product,
   Sale,
@@ -93,6 +95,10 @@ function ToyIcon({ category, color, className = "w-12 h-12" }: { category?: stri
         <TeddyPenguinSVG colors={getPenguinColors(color)} className={className} />
       ) : resolvedCategory === 'stitch' ? (
         <TeddyStitchSVG colors={getStitchColors(color)} className={className} />
+      ) : resolvedCategory === 'rabbit' ? (
+        <TeddyRabbitSVG colors={getRabbitColors(color)} className={className} />
+      ) : resolvedCategory === 'dog' ? (
+        <TeddyDogSVG colors={getDogColors(color)} className={className} />
       ) : (
         <TeddyBearSVG colors={getBearColors(color)} className={className} />
       )}
@@ -2728,18 +2734,35 @@ export default function Dashboard() {
 
               <div>
                 <label className="block text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">Toy Icon Category</label>
-                <select
-                  value={productForm.category || 'Teddy'}
-                  onChange={e => setProductForm({ ...productForm, category: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none cursor-pointer font-bold"
-                >
-                  <option value="Teddy">🧸 Teddy Bear</option>
-                  <option value="Dino">🦖 Dinosaur</option>
-                  <option value="Unicorn">🦄 Unicorn</option>
-                  <option value="Elephant">🐘 Elephant</option>
-                  <option value="Penguin">🐧 Penguin</option>
-                  <option value="Stitch">🌺 Stitch</option>
-                </select>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { id: 'Teddy', label: 'Teddy Bear', emoji: '🧸' },
+                    { id: 'Dino', label: 'Dinosaur', emoji: '🦖' },
+                    { id: 'Unicorn', label: 'Unicorn', emoji: '🦄' },
+                    { id: 'Elephant', label: 'Elephant', emoji: '🐘' },
+                    { id: 'Penguin', label: 'Penguin', emoji: '🐧' },
+                    { id: 'Stitch', label: 'Stitch', emoji: '🌺' },
+                    { id: 'Rabbit', label: 'Rabbit', emoji: '🐰' },
+                    { id: 'Dog', label: 'Dog', emoji: '🐶' }
+                  ].map(cat => {
+                    const isSelected = (productForm.category || 'Teddy') === cat.id;
+                    return (
+                      <button
+                        type="button"
+                        key={cat.id}
+                        onClick={() => setProductForm({ ...productForm, category: cat.id })}
+                        className={`flex flex-col items-center justify-center p-3 rounded-2xl border text-center transition-all cursor-pointer select-none active:scale-[0.96] ${
+                          isSelected
+                            ? 'border-[#5334ac] bg-[#5334ac]/5 text-[#5334ac] font-black shadow-xs'
+                            : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900/50'
+                        }`}
+                      >
+                        <span className="text-xl mb-1">{cat.emoji}</span>
+                        <span className="text-[9px] font-black tracking-wide leading-none">{cat.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <button
