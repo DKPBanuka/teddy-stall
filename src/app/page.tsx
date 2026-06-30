@@ -212,6 +212,11 @@ export default function Dashboard() {
     username: '', name: '', role: 'seller', passwordHash: ''
   });
 
+  // Reports Date Filters
+  const [reportsFilterType, setReportsFilterType] = useState<'all' | 'today' | 'yesterday' | '7days' | 'month' | 'custom'>('all');
+  const [reportsStartDate, setReportsStartDate] = useState<string>('');
+  const [reportsEndDate, setReportsEndDate] = useState<string>('');
+
   // Guard page load
   useEffect(() => {
     if (!loading && !user) {
@@ -719,12 +724,133 @@ export default function Dashboard() {
     return Array.from(map.values());
   }, [filteredProducts]);
 
+  // Memoized Filtered Reports Datasets
+  const filteredSales = React.useMemo(() => {
+    return sales.filter(s => {
+      const date = new Date(s.createdAt);
+      if (reportsFilterType === 'all') return true;
+      
+      const now = new Date();
+      if (reportsFilterType === 'today') {
+        return date.toDateString() === now.toDateString();
+      }
+      if (reportsFilterType === 'yesterday') {
+        const yesterday = new Date();
+        yesterday.setDate(now.getDate() - 1);
+        return date.toDateString() === yesterday.toDateString();
+      }
+      if (reportsFilterType === '7days') {
+        const limit = new Date();
+        limit.setDate(now.getDate() - 6);
+        limit.setHours(0,0,0,0);
+        return date.getTime() >= limit.getTime();
+      }
+      if (reportsFilterType === 'month') {
+        return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+      }
+      if (reportsFilterType === 'custom') {
+        if (reportsStartDate) {
+          const start = new Date(reportsStartDate);
+          start.setHours(0,0,0,0);
+          if (date.getTime() < start.getTime()) return false;
+        }
+        if (reportsEndDate) {
+          const end = new Date(reportsEndDate);
+          end.setHours(23,59,59,999);
+          if (date.getTime() > end.getTime()) return false;
+        }
+        return true;
+      }
+      return true;
+    });
+  }, [sales, reportsFilterType, reportsStartDate, reportsEndDate]);
+
+  const filteredExpenses = React.useMemo(() => {
+    return expensesLogs.filter(e => {
+      const date = new Date(e.createdAt);
+      if (reportsFilterType === 'all') return true;
+      
+      const now = new Date();
+      if (reportsFilterType === 'today') {
+        return date.toDateString() === now.toDateString();
+      }
+      if (reportsFilterType === 'yesterday') {
+        const yesterday = new Date();
+        yesterday.setDate(now.getDate() - 1);
+        return date.toDateString() === yesterday.toDateString();
+      }
+      if (reportsFilterType === '7days') {
+        const limit = new Date();
+        limit.setDate(now.getDate() - 6);
+        limit.setHours(0,0,0,0);
+        return date.getTime() >= limit.getTime();
+      }
+      if (reportsFilterType === 'month') {
+        return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+      }
+      if (reportsFilterType === 'custom') {
+        if (reportsStartDate) {
+          const start = new Date(reportsStartDate);
+          start.setHours(0,0,0,0);
+          if (date.getTime() < start.getTime()) return false;
+        }
+        if (reportsEndDate) {
+          const end = new Date(reportsEndDate);
+          end.setHours(23,59,59,999);
+          if (date.getTime() > end.getTime()) return false;
+        }
+        return true;
+      }
+      return true;
+    });
+  }, [expensesLogs, reportsFilterType, reportsStartDate, reportsEndDate]);
+
+  const filteredShrinkage = React.useMemo(() => {
+    return shrinkageLogs.filter(s => {
+      const date = new Date(s.createdAt);
+      if (reportsFilterType === 'all') return true;
+      
+      const now = new Date();
+      if (reportsFilterType === 'today') {
+        return date.toDateString() === now.toDateString();
+      }
+      if (reportsFilterType === 'yesterday') {
+        const yesterday = new Date();
+        yesterday.setDate(now.getDate() - 1);
+        return date.toDateString() === yesterday.toDateString();
+      }
+      if (reportsFilterType === '7days') {
+        const limit = new Date();
+        limit.setDate(now.getDate() - 6);
+        limit.setHours(0,0,0,0);
+        return date.getTime() >= limit.getTime();
+      }
+      if (reportsFilterType === 'month') {
+        return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+      }
+      if (reportsFilterType === 'custom') {
+        if (reportsStartDate) {
+          const start = new Date(reportsStartDate);
+          start.setHours(0,0,0,0);
+          if (date.getTime() < start.getTime()) return false;
+        }
+        if (reportsEndDate) {
+          const end = new Date(reportsEndDate);
+          end.setHours(23,59,59,999);
+          if (date.getTime() > end.getTime()) return false;
+        }
+        return true;
+      }
+      return true;
+    });
+  }, [shrinkageLogs, reportsFilterType, reportsStartDate, reportsEndDate]);
+
   // Analytics Stats
-  const statsRevenue = sales.reduce((sum, s) => sum + s.total, 0);
-  const statsDiscount = sales.reduce((sum, s) => sum + (s.discount || 0), 0);
-  const statsExpenses = expensesLogs.reduce((sum, e) => sum + e.amount, 0);
+  const statsRevenue = filteredSales.reduce((sum, s) => sum + s.total, 0);
+  const statsDiscount = filteredSales.reduce((sum, s) => sum + (s.discount || 0), 0);
+  const statsExpenses = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
   const statsLorryStock = products.reduce((sum, p) => sum + p.lorryStock, 0);
-  const statsShrinkageCount = shrinkageLogs.reduce((sum, s) => sum + s.quantity, 0);
+  const statsShrinkageCount = filteredShrinkage.reduce((sum, s) => sum + s.quantity, 0);
   const statsNetCash = statsRevenue - statsExpenses;
 
   // Quick Checkout Helpers (Dynamic lists based on DB variants of active product name)
@@ -1703,106 +1829,173 @@ export default function Dashboard() {
               {/* ---------------------------------------------------- */}
               {activeTab === 'reports' && (isAdmin || isStockManager) && (
                 <div className="flex flex-col gap-6">
-                  <div>
-                    <h1 className="text-2xl font-black text-zinc-900 dark:text-zinc-50">STALL REVENUE & ANALYTICS</h1>
-                    <p className="text-xs text-zinc-500 mt-1">Live tracking of transactions, cash flow, and expenses</p>
+                  {/* Title & Date Filters */}
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                      <h1 className="text-2xl font-black text-zinc-900 dark:text-zinc-50 uppercase tracking-tight">Stall Revenue & Analytics</h1>
+                      <p className="text-xs text-zinc-500 mt-1">Live tracking of transactions, cash flow, and expenses</p>
+                    </div>
+
+                    {/* Date filter preset selection */}
+                    <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                      <div className="flex gap-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-1 rounded-2xl w-full md:w-auto overflow-x-auto whitespace-nowrap scrollbar-none">
+                        {[
+                          { key: 'all', label: 'All' },
+                          { key: 'today', label: 'Today' },
+                          { key: 'yesterday', label: 'Yesterday' },
+                          { key: '7days', label: '7 Days' },
+                          { key: 'month', label: 'Month' },
+                          { key: 'custom', label: 'Custom' }
+                        ].map(f => (
+                          <button
+                            key={f.key}
+                            type="button"
+                            onClick={() => setReportsFilterType(f.key as any)}
+                            className={`px-3 py-1.5 rounded-xl text-[10px] font-bold cursor-pointer transition-all active:scale-95 shrink-0 ${
+                              reportsFilterType === f.key
+                                ? 'bg-[#5334ac] text-white shadow-sm'
+                                : 'text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                            }`}
+                          >
+                            {f.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
+                  {/* Custom Calendar date inputs row */}
+                  {reportsFilterType === 'custom' && (
+                    <div className="p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl grid grid-cols-2 md:grid-cols-4 gap-4 items-end text-xs font-bold">
+                      <div>
+                        <label className="block text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1.5">Start Date</label>
+                        <input
+                          type="date"
+                          value={reportsStartDate}
+                          onChange={e => setReportsStartDate(e.target.value)}
+                          className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1.5">End Date</label>
+                        <input
+                          type="date"
+                          value={reportsEndDate}
+                          onChange={e => setReportsEndDate(e.target.value)}
+                          className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-955 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => { setReportsStartDate(''); setReportsEndDate(''); }}
+                        className="py-2.5 px-4 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-650 dark:text-zinc-300 rounded-xl transition-all cursor-pointer"
+                      >
+                        Reset Filter
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Summary Metric Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm flex items-center gap-4">
+                    <div className="p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-xs flex items-center gap-4">
                       <div className="p-3 bg-amber-500/10 text-amber-500 rounded-2xl">
-                        <DollarSign className="w-6 h-6" />
+                        <DollarSign className="w-5.5 h-5.5" />
                       </div>
                       <div>
                         <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider leading-none">Gross Sales</p>
-                        <p className="text-lg font-black text-zinc-955 dark:text-white mt-1">Rs. {statsRevenue}</p>
+                        <p className="text-base font-black text-zinc-955 dark:text-white mt-1">Rs. {statsRevenue}</p>
                       </div>
                     </div>
 
-                    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm flex items-center gap-4">
+                    <div className="p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-xs flex items-center gap-4">
                       <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-2xl">
-                        <Percent className="w-6 h-6" />
+                        <Percent className="w-5.5 h-5.5" />
                       </div>
                       <div>
                         <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider leading-none">Discounts</p>
-                        <p className="text-lg font-black text-zinc-955 dark:text-white mt-1">Rs. {statsDiscount}</p>
+                        <p className="text-base font-black text-zinc-955 dark:text-white mt-1">Rs. {statsDiscount}</p>
                       </div>
                     </div>
 
-                    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm flex items-center gap-4">
+                    <div className="p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-xs flex items-center gap-4">
                       <div className="p-3 bg-red-500/10 text-red-500 rounded-2xl">
-                        <TrendingDown className="w-6 h-6" />
+                        <TrendingDown className="w-5.5 h-5.5" />
                       </div>
                       <div>
                         <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider leading-none">Stall Expenses</p>
-                        <p className="text-lg font-black text-red-500 mt-1">Rs. {statsExpenses}</p>
+                        <p className="text-base font-black text-red-500 mt-1">Rs. {statsExpenses}</p>
                       </div>
                     </div>
 
-                    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm flex items-center gap-4">
+                    <div className="p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-xs flex items-center gap-4">
                       <div className="p-3 bg-blue-500/10 text-blue-500 rounded-2xl">
-                        <ShoppingCart className="w-6 h-6" />
+                        <ShoppingCart className="w-5.5 h-5.5" />
                       </div>
                       <div>
                         <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider leading-none">Net Profit (Cash)</p>
-                        <p className={`text-lg font-black mt-1 ${statsNetCash < 0 ? 'text-red-500' : 'text-emerald-600'}`}>Rs. {statsNetCash}</p>
+                        <p className={`text-base font-black mt-1 ${statsNetCash < 0 ? 'text-red-500' : 'text-emerald-600'}`}>Rs. {statsNetCash}</p>
                       </div>
                     </div>
 
-                    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm flex items-center gap-4">
+                    <div className="p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-xs flex items-center gap-4">
                       <div className="p-3 bg-zinc-500/10 text-zinc-500 rounded-2xl">
-                        <Package className="w-6 h-6" />
+                        <Package className="w-5.5 h-5.5" />
                       </div>
                       <div>
                         <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider leading-none">Lorry / Lost Qty</p>
-                        <p className="text-lg font-black text-zinc-955 dark:text-white mt-1">{statsLorryStock} / {statsShrinkageCount}</p>
+                        <p className="text-base font-black text-zinc-955 dark:text-white mt-1">{statsLorryStock} / {statsShrinkageCount}</p>
                       </div>
                     </div>
                   </div>
 
-                  {/* SVG charts */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm flex flex-col">
+                  {/* Responsive Visual Charts Section */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Sales Timeline chart (Spans 2 cols on lg) */}
+                    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-xs lg:col-span-2 flex flex-col">
                       <h3 className="font-extrabold text-zinc-900 dark:text-zinc-100 text-sm mb-1">POS Sales Frequency</h3>
-                      <p className="text-[10px] text-zinc-400 mb-6">Historical invoice streams plotted over time</p>
+                      <p className="text-[10px] text-zinc-400 mb-6">Sales transactions plotted chronologically over selected range</p>
                       
-                      <div className="w-full flex-1 min-h-[200px] flex items-center justify-center">
-                        {sales.length === 0 ? (
-                          <span className="text-zinc-400 text-xs font-semibold">No sales transactions available to graph</span>
+                      <div className="w-full flex-1 min-h-[220px] flex items-center justify-center">
+                        {filteredSales.length === 0 ? (
+                          <span className="text-zinc-400 text-xs font-semibold">No sales transactions logged in this range</span>
                         ) : (
-                          <svg viewBox="0 0 400 200" className="w-full h-full text-zinc-200 dark:text-zinc-800">
-                            <line x1="30" y1="20" x2="380" y2="20" stroke="currentColor" strokeWidth="0.5" strokeDasharray="4" />
-                            <line x1="30" y1="70" x2="380" y2="70" stroke="currentColor" strokeWidth="0.5" strokeDasharray="4" />
-                            <line x1="30" y1="120" x2="380" y2="120" stroke="currentColor" strokeWidth="0.5" strokeDasharray="4" />
-                            <line x1="30" y1="170" x2="380" y2="170" stroke="currentColor" strokeWidth="1" />
-                            <line x1="30" y1="20" x2="30" y2="170" stroke="currentColor" strokeWidth="1" />
+                          <svg viewBox="0 0 400 200" className="w-full h-full text-zinc-200 dark:text-zinc-850">
+                            {/* Grid Guidelines */}
+                            <line x1="35" y1="20" x2="385" y2="20" stroke="currentColor" strokeWidth="0.5" strokeDasharray="3" />
+                            <line x1="35" y1="65" x2="385" y2="65" stroke="currentColor" strokeWidth="0.5" strokeDasharray="3" />
+                            <line x1="35" y1="110" x2="385" y2="110" stroke="currentColor" strokeWidth="0.5" strokeDasharray="3" />
+                            <line x1="35" y1="155" x2="385" y2="155" stroke="currentColor" strokeWidth="0.8" />
+                            <line x1="35" y1="20" x2="35" y2="155" stroke="currentColor" strokeWidth="0.8" />
 
                             {(() => {
-                              const maxLimit = Math.min(sales.length, 7);
-                              const plotSales = [...sales].slice(0, maxLimit).reverse();
-                              const highestVal = Math.max(...plotSales.map(s => s.total), 30);
+                              const plotSales = [...filteredSales].slice(0, 8).reverse();
+                              const highestVal = Math.max(...plotSales.map(s => s.total), 100);
 
                               const points = plotSales.map((s, idx) => {
-                                const x = 30 + (idx * (350 / Math.max(1, maxLimit - 1)));
-                                const y = 170 - ((s.total / highestVal) * 140);
-                                return { x, y, total: s.total, date: new Date(s.createdAt).toLocaleTimeString() };
+                                const x = 35 + (idx * (350 / Math.max(1, plotSales.length - 1)));
+                                const y = 155 - ((s.total / highestVal) * 125);
+                                const dObj = new Date(s.createdAt);
+                                const dateLabel = reportsFilterType === 'today' || reportsFilterType === 'yesterday'
+                                  ? `${String(dObj.getHours()).padStart(2, '0')}:${String(dObj.getMinutes()).padStart(2, '0')}`
+                                  : `${dObj.getMonth() + 1}/${dObj.getDate()}`;
+                                return { x, y, total: s.total, label: dateLabel };
                               });
 
                               const linePath = points.map((p, idx) => idx === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`).join(' ');
-                              const areaPath = points.length > 0 ? `${linePath} L ${points[points.length - 1].x} 170 L ${points[0].x} 170 Z` : '';
+                              const areaPath = points.length > 0 ? `${linePath} L ${points[points.length - 1].x} 155 L ${points[0].x} 155 Z` : '';
 
                               return (
                                 <>
                                   {areaPath && <path d={areaPath} fill="url(#dashGrad)" opacity="0.15" />}
-                                  {linePath && <path d={linePath} fill="none" stroke="#5334ac" strokeWidth="3" strokeLinecap="round" />}
+                                  {linePath && <path d={linePath} fill="none" stroke="#5334ac" strokeWidth="2.5" strokeLinecap="round" />}
                                   {points.map((p, idx) => (
                                     <g key={idx} className="group/hotspot">
-                                      <circle cx={p.x} cy={p.y} r="5" className="fill-[#5334ac] stroke-white dark:stroke-zinc-900 cursor-pointer" strokeWidth="2" />
-                                      <text x={p.x} y={p.y - 10} textAnchor="middle" className="text-[8px] font-bold fill-zinc-800 dark:fill-zinc-350 opacity-0 group-hover/hotspot:opacity-100 transition-opacity">
-                                        Rs. {p.total}
+                                      <circle cx={p.x} cy={p.y} r="4" className="fill-[#5334ac] stroke-white dark:stroke-zinc-900 cursor-pointer hover:r-6 transition-all" strokeWidth="1.5" />
+                                      <text x={p.x} y={p.y - 8} textAnchor="middle" className="text-[7px] font-black fill-zinc-900 dark:fill-zinc-200 bg-white dark:bg-zinc-900 p-0.5 rounded shadow-sm opacity-0 group-hover/hotspot:opacity-100 transition-opacity">
+                                        Rs.{p.total}
                                       </text>
-                                      <text x={p.x} y="185" textAnchor="middle" className="text-[7px] fill-zinc-400 font-bold">
-                                        {p.date.substring(0, 5)}
+                                      <text x={p.x} y="172" textAnchor="middle" className="text-[6.5px] fill-zinc-400 dark:fill-zinc-500 font-bold">
+                                        {p.label}
                                       </text>
                                     </g>
                                   ))}
@@ -1820,22 +2013,72 @@ export default function Dashboard() {
                       </div>
                     </div>
 
-                    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm flex flex-col">
-                      <h3 className="font-extrabold text-zinc-900 dark:text-zinc-100 text-sm mb-1">Shrinkage Distribution</h3>
+                    {/* Category-wise breakdown progress chart */}
+                    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-xs flex flex-col">
+                      <h3 className="font-extrabold text-zinc-900 dark:text-zinc-100 text-sm mb-1">Sales by Category</h3>
+                      <p className="text-[10px] text-zinc-400 mb-6">Revenue share logged per product category</p>
+                      
+                      <div className="flex-1 flex flex-col justify-center gap-4">
+                        {(() => {
+                          const categoryRev: Record<string, number> = {
+                            Teddy: 0, Dino: 0, Unicorn: 0, Elephant: 0, Penguin: 0
+                          };
+                          filteredSales.forEach(s => {
+                            s.items.forEach(item => {
+                              const prodObj = products.find(p => p.id === item.productId);
+                              const cat = prodObj?.category || 'Teddy';
+                              categoryRev[cat] = (categoryRev[cat] || 0) + (item.price * item.quantity);
+                            });
+                          });
+
+                          const totalCategorySales = Object.values(categoryRev).reduce((sum, v) => sum + v, 0);
+                          const sortedCategories = Object.entries(categoryRev).map(([name, rev]) => ({ name, rev }));
+
+                          if (totalCategorySales === 0) {
+                            return <span className="text-zinc-400 text-xs text-center font-semibold">No category metrics logged</span>;
+                          }
+
+                          return sortedCategories.map((item, idx) => {
+                            const pct = totalCategorySales > 0 ? (item.rev / totalCategorySales) * 100 : 0;
+                            return (
+                              <div key={idx} className="space-y-1">
+                                <div className="flex justify-between text-xs font-bold">
+                                  <span className="text-zinc-700 dark:text-zinc-300">{item.name}</span>
+                                  <span className="text-zinc-500">Rs.{item.rev} ({Math.round(pct)}%)</span>
+                                </div>
+                                <div className="w-full h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                                  <div
+                                    style={{ width: `${pct}%` }}
+                                    className="h-full bg-gradient-to-r from-indigo-500 to-[#5334ac] rounded-full"
+                                  ></div>
+                                </div>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Shrinkage & Recent sales logs block */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Shrinkage Loss Logs */}
+                    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-xs flex flex-col">
+                      <h3 className="font-extrabold text-zinc-900 dark:text-zinc-100 text-sm mb-1">Leakage Distribution</h3>
                       <p className="text-[10px] text-zinc-400 mb-6">Quantity comparison of lost / stolen items per category</p>
                       
                       <div className="flex-1 flex flex-col justify-center gap-4">
                         {(() => {
-                          const shrinkageByProd: Record<string, number> = {};
-                          shrinkageLogs.forEach(log => {
-                            shrinkageByProd[log.name] = (shrinkageByProd[log.name] || 0) + log.quantity;
+                          const leakageByProd: Record<string, number> = {};
+                          filteredShrinkage.forEach(log => {
+                            leakageByProd[log.name] = (leakageByProd[log.name] || 0) + log.quantity;
                           });
 
-                          const dataArr = Object.entries(shrinkageByProd).map(([name, qty]) => ({ name, qty }));
+                          const dataArr = Object.entries(leakageByProd).map(([name, qty]) => ({ name, qty }));
                           const maxQty = Math.max(...dataArr.map(d => d.qty), 1);
 
                           if (dataArr.length === 0) {
-                            return <span className="text-zinc-400 text-xs text-center font-semibold">No leakage losses logged</span>;
+                            return <span className="text-zinc-400 text-xs text-center font-semibold">No leakage losses logged in this range</span>;
                           }
 
                           return dataArr.map((item, idx) => {
@@ -1853,6 +2096,41 @@ export default function Dashboard() {
                             );
                           });
                         })()}
+                      </div>
+                    </div>
+
+                    {/* Recent Transaction Log Ledger */}
+                    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-xs flex flex-col">
+                      <h3 className="font-extrabold text-zinc-900 dark:text-zinc-100 text-sm mb-1">Recent Transactions</h3>
+                      <p className="text-[10px] text-zinc-400 mb-4">Latest cash checkout invoices in this range</p>
+                      
+                      <div className="flex-1 overflow-x-auto">
+                        {filteredSales.length === 0 ? (
+                          <div className="h-full flex items-center justify-center p-8">
+                            <span className="text-zinc-400 text-xs font-semibold">No invoices recorded</span>
+                          </div>
+                        ) : (
+                          <table className="w-full text-left">
+                            <thead>
+                              <tr className="text-[9px] uppercase tracking-wider text-zinc-400 border-b border-zinc-100 dark:border-zinc-850 pb-2">
+                                <th className="pb-2">Items</th>
+                                <th className="pb-2 text-right">Total</th>
+                                <th className="pb-2 text-right">Date</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-850 text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                              {filteredSales.slice(0, 5).map(log => (
+                                <tr key={log.id}>
+                                  <td className="py-2.5 truncate max-w-[150px]">
+                                    {log.items.map(i => `${i.name} (${i.quantity})`).join(', ')}
+                                  </td>
+                                  <td className="py-2.5 text-right text-emerald-600">Rs.{log.total}</td>
+                                  <td className="py-2.5 text-right text-zinc-400 font-semibold">{new Date(log.createdAt).toLocaleDateString()}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
                       </div>
                     </div>
                   </div>
