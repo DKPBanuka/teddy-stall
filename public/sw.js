@@ -35,23 +35,54 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   if (!event.request.url.startsWith(self.location.origin)) return;
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-          return networkResponse;
+  // Skip caching API routes (like Firestore or our internal sync route)
+  if (event.request.url.includes('/api/')) return;
+
+  const url = new URL(event.request.url);
+
+  // If it's a static hashed asset (Next.js chunks, css, media, icons)
+  const isStaticAsset = url.pathname.includes('/_next/') || 
+                        url.pathname.includes('/icon') || 
+                        url.pathname.includes('/manifest.json') || 
+                        url.pathname.includes('/favicon.ico');
+
+  if (isStaticAsset) {
+    // Cache-First strategy
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
         }
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
+        return fetch(event.request).then((networkResponse) => {
+          if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+            return networkResponse;
+          }
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+          return networkResponse;
         });
-        return networkResponse;
-      }).catch(() => {
-        // network down fallback
-      });
-    })
-  );
+      })
+    );
+  } else {
+    // Network-First strategy (always get latest HTML on deploy, fallback to cache if offline)
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(event.request).then((cachedResponse) => {
+            if (cachedResponse) return cachedResponse;
+          });
+        })
+    );
+  }
 });
