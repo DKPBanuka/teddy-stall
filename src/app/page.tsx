@@ -8,6 +8,7 @@ import { TeddyDinoSVG, getDinoColors } from '@/components/TeddyDinoSVG';
 import { TeddyUnicornSVG, getUnicornColors } from '@/components/TeddyUnicornSVG';
 import { TeddyElephantSVG, getElephantColors } from '@/components/TeddyElephantSVG';
 import { TeddyPenguinSVG, getPenguinColors } from '@/components/TeddyPenguinSVG';
+import { TeddyBearSVG, getBearColors } from '@/components/TeddyBearSVG';
 import {
   Product,
   Sale,
@@ -90,17 +91,7 @@ function ToyIcon({ category, color, className = "w-12 h-12" }: { category?: stri
       ) : resolvedCategory === 'penguin' ? (
         <TeddyPenguinSVG colors={getPenguinColors(color)} className={className} />
       ) : (
-        <svg viewBox="0 0 100 100" className={className} style={{ fill: fillHex }}>
-          <circle cx="50" cy="50" r="30" />
-          <circle cx="25" cy="25" r="12" />
-          <circle cx="75" cy="25" r="12" />
-          <circle cx="25" cy="25" r="6" fill="#f43f5e" opacity="0.3" />
-          <circle cx="75" cy="25" r="6" fill="#f43f5e" opacity="0.3" />
-          <circle cx="50" cy="58" r="10" fill="#ffffff" />
-          <ellipse cx="50" cy="54" rx="4" ry="2" fill="#000000" />
-          <circle cx="40" cy="45" r="3" fill="#000000" />
-          <circle cx="60" cy="45" r="3" fill="#000000" />
-        </svg>
+        <TeddyBearSVG colors={getBearColors(color)} className={className} />
       )}
     </div>
   );
