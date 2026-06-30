@@ -2583,132 +2583,105 @@ export default function Dashboard() {
                 })()}
               </div>
 
-              {/* DYNAMIC CLICKABLE COLOR PICKER CIRCLES (Only for new registrations) */}
-              {!editingProduct ? (
-                <>
+              {/* DYNAMIC CLICKABLE COLOR PICKER CIRCLES & SIZE SELECTORS FOR BOTH ADD/EDIT MODES */}
+              <div className="p-3 bg-zinc-50 dark:bg-zinc-950/40 border border-zinc-150 dark:border-zinc-800/80 rounded-2xl space-y-3.5">
+                <p className="text-[10px] font-extrabold text-zinc-400 dark:text-zinc-550 uppercase tracking-wider pl-0.5">Add / Configure Variant</p>
+                
+                <div>
+                  <label className="block text-[9px] font-bold text-zinc-450 uppercase tracking-wider mb-1.5">Select Color</label>
+                  <div className="grid grid-cols-5 gap-1">
+                    {['Brown', 'Pink', 'White', 'Blue', 'Purple', 'Beige', 'Gold', 'Black', 'Green', 'Grey'].map(c => {
+                      const isActive = productForm.color === c;
+                      return (
+                        <button
+                          type="button"
+                          key={c}
+                          onClick={() => setProductForm({ ...productForm, color: c })}
+                          className={`py-1.5 rounded-lg text-[9px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer border ${
+                            isActive
+                              ? 'border-[#5334ac] bg-[#5334ac]/5 text-[#5334ac] font-black'
+                              : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-650 hover:bg-zinc-50'
+                          }`}
+                        >
+                          <span className="w-2 h-2 rounded-full border border-zinc-150 block shrink-0" style={{ backgroundColor: getColorHex(c) }}></span>
+                          <span>{c}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[9px] font-bold text-zinc-450 uppercase tracking-wider mb-1.5">Select Size</label>
+                  <div className="grid grid-cols-4 gap-1">
+                    {(['Small', 'Medium', 'Large', 'Giant'] as const).map(sz => {
+                      const isActive = productForm.size === sz;
+                      return (
+                        <button
+                          type="button"
+                          key={sz}
+                          onClick={() => setProductForm({ ...productForm, size: sz })}
+                          className={`py-2 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer border ${
+                            isActive
+                              ? 'bg-[#5334ac] border-[#5334ac] text-white shadow-sm'
+                              : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-750 dark:text-zinc-300 hover:bg-zinc-50'
+                          }`}
+                        >
+                          {sz}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">Select Color</label>
-                    <div className="grid grid-cols-5 gap-1.5">
-                      {['Brown', 'Pink', 'White', 'Blue', 'Purple', 'Beige', 'Gold', 'Black', 'Green', 'Grey'].map(c => {
-                        const isActive = productForm.color === c;
-                        return (
-                          <button
-                            type="button"
-                            key={c}
-                            onClick={() => setProductForm({ ...productForm, color: c })}
-                            className={`py-2 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border ${
-                              isActive
-                                ? 'border-[#5334ac] bg-[#5334ac]/5 text-[#5334ac] font-black'
-                                : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-650 hover:bg-zinc-50'
-                            }`}
-                          >
-                            <span className="w-2.5 h-2.5 rounded-full border border-zinc-150 block shrink-0" style={{ backgroundColor: getColorHex(c) }}></span>
-                            <span>{c}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <label className="block text-[9px] font-bold text-zinc-450 uppercase tracking-wider mb-1.5">Price (Rs.)</label>
+                    <input
+                      type="number"
+                      required={variantQueue.length === 0}
+                      value={productForm.price !== undefined ? productForm.price : ''}
+                      onChange={e => setProductForm({ ...productForm, price: parseFloat(e.target.value || '0') })}
+                      placeholder="1500"
+                      className="w-full px-3 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none font-bold"
+                    />
                   </div>
-
-                  {/* DYNAMIC SIZE PICKER */}
                   <div>
-                    <label className="block text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">Select Size</label>
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {(['Small', 'Medium', 'Large', 'Giant'] as const).map(sz => {
-                        const isActive = productForm.size === sz;
-                        return (
-                          <button
-                            type="button"
-                            key={sz}
-                            onClick={() => setProductForm({ ...productForm, size: sz })}
-                            className={`py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer border ${
-                              isActive
-                                ? 'bg-[#5334ac] border-[#5334ac] text-white shadow-sm'
-                                : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50'
-                            }`}
-                          >
-                            {sz}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <label className="block text-[9px] font-bold text-zinc-450 uppercase tracking-wider mb-1.5">Stall Stock</label>
+                    <input
+                      type="number"
+                      required={variantQueue.length === 0}
+                      value={productForm.lorryStock !== undefined ? productForm.lorryStock : ''}
+                      onChange={e => setProductForm({ ...productForm, lorryStock: parseInt(e.target.value || '0') })}
+                      placeholder="50"
+                      className="w-full px-3 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none font-bold"
+                    />
                   </div>
+                </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">Price (Rs.)</label>
-                      <input
-                        type="number"
-                        required={variantQueue.length === 0}
-                        value={productForm.price !== undefined ? productForm.price : ''}
-                        onChange={e => setProductForm({ ...productForm, price: parseFloat(e.target.value || '0') })}
-                        placeholder="1500"
-                        className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none font-bold"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">Stall Stock Quantity</label>
-                      <input
-                        type="number"
-                        required={variantQueue.length === 0}
-                        value={productForm.lorryStock !== undefined ? productForm.lorryStock : ''}
-                        onChange={e => setProductForm({ ...productForm, lorryStock: parseInt(e.target.value || '0') })}
-                        placeholder="50"
-                        className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none font-bold"
-                      />
-                    </div>
-                  </div>
+                <button
+                  type="button"
+                  onClick={addVariantToQueue}
+                  className="w-full py-2 bg-white dark:bg-zinc-900 border border-[#5334ac] hover:bg-[#5334ac]/5 text-[#5334ac] font-bold rounded-xl active:scale-[0.98] transition-all cursor-pointer text-[10px] uppercase"
+                >
+                  + Add Variant to List
+                </button>
+              </div>
 
-                  <button
-                    type="button"
-                    onClick={addVariantToQueue}
-                    className="w-full py-2.5 border border-[#5334ac] hover:bg-[#5334ac]/5 text-[#5334ac] font-bold rounded-xl active:scale-[0.98] transition-all cursor-pointer text-xs uppercase"
-                  >
-                    + Add Variant to List
-                  </button>
-
-                  {/* VARIANT QUEUE LIST FOR REGISTRATION */}
-                  {variantQueue.length > 0 && (
-                    <div className="space-y-2 border-t border-zinc-150 dark:border-zinc-800 pt-3">
-                      <label className="block text-[10px] font-extrabold text-[#5334ac] dark:text-[#a78bfa] uppercase tracking-wider pl-0.5">
-                        Variants to be Registered ({variantQueue.length})
-                      </label>
-                      <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
-                        {variantQueue.map((item, idx) => (
-                          <div key={idx} className="flex gap-2 items-center p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-850 rounded-2xl">
-                            <div className="flex-1 min-w-0 flex items-center gap-1.5">
-                              <span className="w-3 h-3 rounded-full border border-zinc-200 block shrink-0" style={{ backgroundColor: getColorHex(item.color) }}></span>
-                              <span className="text-[10px] font-bold truncate leading-tight">{item.color} - {item.size}</span>
-                            </div>
-                            <div className="text-[10px] font-semibold text-zinc-500">Rs. {item.price}</div>
-                            <div className="text-[10px] font-black text-emerald-600 px-2">{item.lorryStock} units</div>
-                            <button
-                              type="button"
-                              onClick={() => setVariantQueue(variantQueue.filter((_, i) => i !== idx))}
-                              className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                /* EDIT MODE - BULK VARIANT EDITOR GRID */
+              {/* UNIFIED EDITABLE LIST OF PRODUCT VARIATIONS */}
+              {variantQueue.length > 0 && (
                 <div className="space-y-2 border-t border-zinc-150 dark:border-zinc-800 pt-3">
                   <label className="block text-[10px] font-extrabold text-[#5334ac] dark:text-[#a78bfa] uppercase tracking-wider pl-0.5">
-                    Edit Product Variants ({variantQueue.length})
+                    Product Variants ({variantQueue.length})
                   </label>
-                  <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+                  <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
                     {variantQueue.map((item, idx) => (
-                      <div key={idx} className="flex gap-2 items-center p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-850 rounded-2xl">
-                        <div className="flex-1 min-w-0 flex items-center gap-1.5">
-                          <span className="w-3 h-3 rounded-full border border-zinc-200 block shrink-0" style={{ backgroundColor: getColorHex(item.color) }}></span>
+                      <div key={idx} className="flex gap-2 items-center p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-150 dark:border-zinc-850 rounded-xl">
+                        <div className="flex-1 min-w-0 flex items-center gap-1">
+                          <span className="w-2.5 h-2.5 rounded-full border border-zinc-200 block shrink-0" style={{ backgroundColor: getColorHex(item.color) }}></span>
                           <span className="text-[10px] font-bold truncate leading-tight">{item.color} - {item.size}</span>
                         </div>
-                        <div className="w-24 flex items-center gap-1">
+                        <div className="w-20 flex items-center gap-1">
                           <span className="text-[9px] text-zinc-400 font-bold">Rs.</span>
                           <input
                             type="number"
@@ -2717,10 +2690,10 @@ export default function Dashboard() {
                               const val = parseFloat(e.target.value || '0');
                               setVariantQueue(prev => prev.map((q, i) => i === idx ? { ...q, price: val } : q));
                             }}
-                            className="w-full px-2 py-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-[10px] font-bold text-center focus:outline-none"
+                            className="w-full px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-805 rounded-lg text-[10px] font-bold text-center focus:outline-none"
                           />
                         </div>
-                        <div className="w-20 flex items-center gap-1">
+                        <div className="w-16 flex items-center gap-1">
                           <span className="text-[9px] text-zinc-400 font-bold">Qty</span>
                           <input
                             type="number"
@@ -2729,7 +2702,7 @@ export default function Dashboard() {
                               const val = parseInt(e.target.value || '0');
                               setVariantQueue(prev => prev.map((q, i) => i === idx ? { ...q, lorryStock: val } : q));
                             }}
-                            className="w-full px-2 py-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-[10px] font-bold text-center focus:outline-none"
+                            className="w-full px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-805 rounded-lg text-[10px] font-bold text-center focus:outline-none"
                           />
                         </div>
                         <button
@@ -2742,7 +2715,7 @@ export default function Dashboard() {
                           }}
                           className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     ))}
